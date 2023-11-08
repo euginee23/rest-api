@@ -65,13 +65,13 @@ const controller = {
       },
 
       put: (req, res) => {
-        const userId = req.params.Id; 
-        const { username, password, fullname } = req.body;
+        const userId = req.params.Id;
+        const { fullname, username, password } = req.body;
     
-        if (!username || !password || !fullname) {
+        if (!fullname && !username && !password) {
             return res
                 .status(400)
-                .json({ message: "Username/Password/Fullname is required" });
+                .json({ message: "At least one field (fullname, username, or password) is required for the update" });
         }
     
         fs.readFile("src/store/users.json", "utf-8", (err, data) => {
@@ -83,31 +83,30 @@ const controller = {
             const userIndex = users.findIndex((user) => user.Id === Number(userId));
     
             if (userIndex !== -1) {
-                users[userIndex] = {
-                    Id: Number(userId),
-                    Fullname: fullname,
-                    Username: username,
-                    Password: password,
-                };
+                if (fullname) {
+                    users[userIndex].Fullname = fullname;
+                }
+                if (username) {
+                    users[userIndex].Username = username;
+                }
+                if (password) {
+                    users[userIndex].Password = password;
+                }
     
-                fs.writeFile(
-                    "src/store/users.json",
-                    JSON.stringify(users),
-                    (err) => {
-                        if (err) {
-                            console.log(err);
-                            return res.status(500).json({ message: err.message });
-                        } else {
-                            return res
-                                .status(200)
-                                .json({ message: `User with ID ${userId} updated successfully.` });
-                        }
+                fs.writeFile("src/store/users.json", JSON.stringify(users), (err) => {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).json({ message: err.message });
+                    } else {
+                        return res
+                            .status(200)
+                            .json({ message: `User with ID ${userId} updated successfully.` });
                     }
-                );
+                });
             } else {
                 return res.status(404).json({ message: "User not found" });
             }
-        }); 
+        });
     },
 
     delete: (req, res) => {
